@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "/Users/tongli/Desktop/summerRes/Camera2Basic/Application/build/intermediates/res/merged/debug/drawable-v21/abc_btn_colored_material.xml",
+        "source": "/Users/tongli/.android/build-cache/bce10db53d629afe24a7d6c9d72bb84cb85f59ee/output/res/drawable-v21/abc_btn_colored_material.xml"
+    },
+    {
+        "merged": "/Users/tongli/Desktop/summerRes/Camera2Basic/Application/build/intermediates/res/merged/debug/drawable-v21/notification_action_background.xml",
+        "source": "/Users/tongli/.android/build-cache/bce10db53d629afe24a7d6c9d72bb84cb85f59ee/output/res/drawable-v21/notification_action_background.xml"
+    },
+    {
+        "merged": "/Users/tongli/Desktop/summerRes/Camera2Basic/Application/build/intermediates/res/merged/debug/drawable-v21/abc_edit_text_material.xml",
+        "source": "/Users/tongli/.android/build-cache/bce10db53d629afe24a7d6c9d72bb84cb85f59ee/output/res/drawable-v21/abc_edit_text_material.xml"
+    },
+    {
+        "merged": "/Users/tongli/Desktop/summerRes/Camera2Basic/Application/build/intermediates/res/merged/debug/drawable-v21/abc_action_bar_item_background_material.xml",
+        "source": "/Users/tongli/.android/build-cache/bce10db53d629afe24a7d6c9d72bb84cb85f59ee/output/res/drawable-v21/abc_action_bar_item_background_material.xml"
+    }
+]
