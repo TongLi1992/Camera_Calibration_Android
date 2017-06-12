@@ -29,6 +29,7 @@ import android.content.res.Configuration;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -79,7 +80,7 @@ public class Camera2BasicFragment extends Fragment
         implements View.OnClickListener, FragmentCompat.OnRequestPermissionsResultCallback {
 
     private List<ByteString> mImages;
-    private int mTotal = 10;
+    private int mTotal = 20;
     /**
      * Conversion from screen rotation to JPEG orientation.
      */
@@ -322,6 +323,7 @@ public class Camera2BasicFragment extends Fragment
                 case STATE_WAITING_LOCK: {
                     Integer afState = result.get(CaptureResult.CONTROL_AF_STATE);
                     if (afState == null) {
+                        System.out.println("STATE_WAITING_LOCK afState == null");
                         captureStillPicture();
                     } else if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState ||
                             CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState) {
@@ -330,6 +332,7 @@ public class Camera2BasicFragment extends Fragment
                         if (aeState == null ||
                                 aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
                             mState = STATE_PICTURE_TAKEN;
+                            System.out.println("STATE_WAITING_LOCK CONTROL_AE_STATE can be null on some devices");
                             captureStillPicture();
                         } else {
                             runPrecaptureSequence();
@@ -352,6 +355,7 @@ public class Camera2BasicFragment extends Fragment
                     Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
                     if (aeState == null || aeState != CaptureResult.CONTROL_AE_STATE_PRECAPTURE) {
                         mState = STATE_PICTURE_TAKEN;
+                        System.out.println("STATE_WAITING_NON_PRECAPTURE");
                         captureStillPicture();
                     }
                     break;
@@ -537,10 +541,18 @@ public class Camera2BasicFragment extends Fragment
                 }
 
                 // For still image captures, we use the largest available size.
-                Size largest = Collections.max(
-                        Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
-                        new CompareSizesByArea());
-                mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
+//                Size largest = Collections.max(
+//                        Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
+//                        new CompareSizesByArea());
+                // We use 640x480 if available
+                // the preview image will be cropped around center by Android to fit targetImageSize
+                // TODO: Android doesn't seem to crop the image for me, I have to build an ImageReader that resizes or crops images
+                Size targetSize = new Size(640, 480);
+                List<Size> imageSizes = Arrays.asList(map.getOutputSizes(ImageFormat.JPEG));
+                if (!imageSizes.contains(targetSize)) {
+                    throw new RuntimeException("640x480 size is not supported");
+                }
+                mImageReader = ImageReader.newInstance(targetSize.getWidth(), targetSize.getHeight(),
                         ImageFormat.JPEG, /*maxImages*/2);
                 mImageReader.setOnImageAvailableListener(
                         mOnImageAvailableListener, mBackgroundHandler);
@@ -590,12 +602,16 @@ public class Camera2BasicFragment extends Fragment
                     maxPreviewHeight = MAX_PREVIEW_HEIGHT;
                 }
 
+                // the preview size has to have the same aspect ratio as the camera sensor, otherwise the image will be skewed
+                Rect sensorRect = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+                Size sensorAspectRatioSize = new Size(sensorRect.width(), sensorRect.height());
+
                 // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
                 // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
                 // garbage capture data.
                 mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
                         rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
-                        maxPreviewHeight, largest);
+                        maxPreviewHeight, sensorAspectRatioSize);
 
                 // We fit the aspect ratio of TextureView to the size of preview we picked.
                 int orientation = getResources().getConfiguration().orientation;
@@ -837,6 +853,7 @@ public class Camera2BasicFragment extends Fragment
      * {@link #mCaptureCallback} from both {@link #lockFocus()}.
      */
     private void captureStillPicture() {
+        System.out.println("captureStillPicture");
         try {
             final Activity activity = getActivity();
             if (null == activity || null == mCameraDevice) {
@@ -864,6 +881,7 @@ public class Camera2BasicFragment extends Fragment
                                                @NonNull CaptureRequest request,
                                                @NonNull TotalCaptureResult result) {
                     Log.d(TAG, mFile.toString());
+                    System.out.println("onCaptureCompleted");
                     unlockFocus();
                 }
             };
